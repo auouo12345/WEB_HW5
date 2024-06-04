@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>404 NOT FOUND</title>
+    <link href="css/bootstrap-grid.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            height: 80vh;
+        }
+        h1 {
+            font-size: 5vh;
+        }
+        h2 {
+            font-size: 3vh;
+        }
+        .main {
+            text-align: center;
+            margin-top: 10vh;
+        }
+        table {
+            height: 50vh;
+            width: 50vh;
+            table-layout: fixed;
+        }
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        td {
+            border: 1px solid black;
+            text-align: center;
+            vertical-align: middle;
+            width: calc(50vh / 3);
+            height: calc(50vh / 3);
+            font-size: calc(40vh / 3);
+            /*禁用文本選擇*/
+            -webkit-user-select: none; /*Chrome, Opera (older versions), IOS Safari*/
+            -webkit-touch-callout: none; /*Safari*/
+            -moz-user-select: none; /*Mozilla*/
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .pointer:hover {
+            cursor: pointer;
+        }
+        .message {
+            margin-top: 2vh;
+            margin-bottom: 2vh;
+        }
+        .reset {
+            width: 10%;
+        }
+        .reset:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row-cols-1">
+            <div class="col d-flex justify-content-center">
+                <div class="header">
+                    <h1>404 NOT FOUND</h1>
+                </div>
+            </div>
+            <div class="col d-flex justify-content-center">
+                <div class="main">
+                    <h2>You Go First</h2>
+                    <div class="game-board d-flex justify-content-center">
+                        <table>
+                            <tr>
+                                <td id="0"></td>
+                                <td id="1"></td>
+                                <td id="2"></td>
+                            </tr>
+                            <tr>
+                                <td id="3"></td>
+                                <td id="4"></td>
+                                <td id="5"></td>
+                            </tr>
+                            <tr>
+                                <td id="6"></td>
+                                <td id="7"></td>
+                                <td id="8"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col d-flex justify-content-center">
+                <div class="message" id="message"></div>
+            </div>
+            <div class="col d-flex justify-content-center">
+                <button class="reset" onclick="resetGame()">Reset</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script>
+        let cells = document.querySelectorAll("td");
+        let board = Array(9).fill(null);
+        const winningCombinations = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6],
+        ];
+
+        function handleClick() {
+            const index = this.id;
+
+            if(this.innerText !== '' || checkWinner()) {
+                return;
+            }
+
+            board[index] = 'O';
+            this.innerText = 'O';
+
+            if(checkEndGame()) {
+                return;
+            }
+
+            removeClickListener();
+            setTimeout(computerMove , 500);
+        }
+
+        function computerMove() {
+            const corner = [0 , 2 , 6 , 8].filter(index => board[index] === null);
+            const edge = [1 , 3 , 5 , 7].filter(index => board[index] === null);
+            let move = findBestMove('X');
+
+            if(move === null) {
+                move = findBestMove('O');
+            }
+
+            if(move === null && board[4] === null) {
+                move = 4;
+            }
+
+            if(move === null && corner.length !== 0) {
+                move = corner[Math.floor(Math.random() * corner.length)];
+            }
+
+            if(move === null && edge.length !== 0) {
+                move = edge[Math.floor(Math.random() * corner.length)];
+            }
+
+            board[move] = 'X';
+            document.getElementById(`${move}`).innerText = 'X';
+
+            if(checkEndGame()) {
+                return;
+            }
+
+            addClickListener();
+        }
+
+        function  checkEndGame() {
+            const winner = checkWinner();
+
+            if(winner === 'O') {
+                document.getElementById('message').innerText = `You Win!`;
+                document.getElementById('message').style.color = "green";
+                removeClickListener();
+                return true;
+            }
+
+            if(winner === 'X') {
+                document.getElementById('message').innerText = `You Lose!`;
+                document.getElementById('message').style.color = "red";
+                removeClickListener();
+                return true;
+            }
+
+            if(board.every(cell => cell !== null)) {
+                document.getElementById('message').innerText = `Draw!`;
+                removeClickListener();
+                return true;
+            }
+
+            return false;
+        }
+
+        function checkWinner() {
+            for (const combination of winningCombinations) {
+                const [a, b, c] = combination;
+
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    return board[a];
+                }
+            }
+
+            return null;
+        }
+
+        function findBestMove(player) {
+            for (const combination of winningCombinations) {
+                const [a, b, c] = combination;
+
+                if (board[a] === player && board[b] === player && board[c] === null) return c;
+                if (board[a] === player && board[c] === player && board[b] === null) return b;
+                if (board[b] === player && board[c] === player && board[a] === null) return a;
+            }
+
+            return null;
+        }
+
+        function resetGame() {
+            board = Array(9).fill(null);
+            document.getElementById('message').innerText = '';
+            cells.forEach(cell => {
+                cell.innerText = '';
+            })
+            addClickListener();
+        }
+
+        function addClickListener() {
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleClick);
+                cell.className = "pointer";
+            });
+        }
+
+        function removeClickListener() {
+            cells.forEach(cell => {
+                cell.removeEventListener('click', handleClick);
+                cell.className = "arrow";
+            });
+        }
+
+        addClickListener();
+    </script>
+</body>
+</html>
