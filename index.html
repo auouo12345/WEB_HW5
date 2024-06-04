@@ -182,6 +182,7 @@
 
             if(board.every(cell => cell !== null)) {
                 document.getElementById('message').innerText = `Draw!`;
+                document.getElementById('message').style.color = "brown";
                 removeClickListener();
                 return true;
             }
